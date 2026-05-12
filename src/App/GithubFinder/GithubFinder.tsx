@@ -50,7 +50,14 @@ const logic = kea<logicType>([
             // code to run when the username is set, e.g. fetch repos for that user
             const url = `${API_URL}/users/${username}/repos?per_page=250`
 
-            const response = await window.fetch(url)
+            // handle network errors
+            let response
+            try {
+                response = await window.fetch(url)
+            } catch (error: any) {
+                actions.setFetchError(error.message)
+                return // nothing to do after, so return
+            }
 
             // break if action was dispatched again while we were fetching / waiting for the response
             breakpoint()
