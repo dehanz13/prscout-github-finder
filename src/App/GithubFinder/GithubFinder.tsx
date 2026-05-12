@@ -45,12 +45,13 @@ const logic = kea<logicType>([
 
     listeners(({ actions }) => ({
         setUsername: async ({ username }, breakpoint) => {
+            await breakpoint(300) // wait for 300ms before running the code below, if `setUsername` is called again within that time, the previous one will be cancelled
+
             // code to run when the username is set, e.g. fetch repos for that user
             const url = `${API_URL}/users/${username}/repos?per_page=250`
 
             const response = await window.fetch(url)
             const json = await response.json()
-            breakpoint()
 
             if (response.status === 200) {
                 // we have repos in `json`
