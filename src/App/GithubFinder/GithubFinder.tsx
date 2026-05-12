@@ -51,6 +51,10 @@ const logic = kea<logicType>([
             const url = `${API_URL}/users/${username}/repos?per_page=250`
 
             const response = await window.fetch(url)
+
+            // break if action was dispatched again while we were fetching / waiting for the response
+            breakpoint()
+
             const json = await response.json()
 
             if (response.status === 200) {
