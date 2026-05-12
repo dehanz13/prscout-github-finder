@@ -1,0 +1,121 @@
+import React from 'react'
+import { kea, actions, listeners, reducers, selectors, useActions, useValues, path, afterMount } from 'kea'
+
+import type { logicType } from './GithubFinderType'
+
+const API_URL = 'https://api.github.com'
+
+const logic = kea<logicType>([
+    path(['App', 'GithubFinder', 'GithubFinder']),
+    actions({
+        setUsername: (username) => ({ username }),
+        setRepositories: (repositories) => ({ repositories }),
+        setFetchError: (error) => ({ error }),
+    }),
+    reducers({
+        username: [
+            'keajs',
+            {
+                setUsername: (_, payload) => payload.username,
+            },
+        ],
+        repositories: [
+            [],
+            {
+                setUsername: () => [],
+                setRepositories: (_, { repositories }) => repositories,
+            },
+        ],
+        isLoading: [
+            false,
+            {
+                setUsername: () => true,
+                setRepositories: () => false,
+                setFetchError: () => false,
+            },
+        ],
+        error: [
+            null,
+            {
+                setUsername: () => null,
+                setFetchError: (_, { error }) => error,
+            },
+        ],
+    }),
+
+    listeners(({ actions }) => ({
+        setUsername: async ({ username }, breakpoint) => {
+            await breakpoint(300) // wait for 300ms before running the code below, if `setUsername` is called again within that time, the previous one will be cancelled
+
+            // code to run when the username is set, e.g. fetch repos for that user
+            const url = `${API_URL}/users/${username}/repos?per_page=250`
+
+            // handle network errors
+            let response
+            try {
+                response = await window.fetch(url)
+            } catch (error: any) {
+                actions.setFetchError(error.message)
+                return // nothing to do after, so return
+            }
+
+            // break if action was dispatched again while we were fetching / waiting for the response
+            breakpoint()
+
+            const json = await response.json()
+
+            if (response.status === 200) {
+                // we have repos in `json`
+                actions.setRepositories(json)
+            } else {
+                // there is an error with `json.message`
+                actions.setFetchError(json.message)
+            }
+        },
+    })),
+
+    afterMount(({ actions, values }) => {
+        actions.setUsername(values.username)
+    }),
+
+    selectors({
+        sortedRepositories: [
+            (selectors) => [selectors.repositories],
+            (repositories) => {
+                return [...repositories].sort((a, b) => b.stargazers_count - a.stargazers_count)
+            },
+        ],
+    }),
+])
+
+export function GithubFinder() {
+    const { username, isLoading, sortedRepositories, error } = useValues(logic)
+    const { setUsername } = useActions(logic)
+
+    return (
+        <div className="example-github-scene">
+            <div style={{ marginBottom: 20 }}>
+                <h1>Search for a github user</h1>
+                <input value={username} type="text" onChange={(e) => setUsername(e.target.value)} />
+            </div>
+            {isLoading ? (
+                <div>Loading...</div>
+            ) : sortedRepositories.length > 0 ? (
+                <div>
+                    Found {sortedRepositories.length} repositories for user <strong>{username}</strong>!
+                    {sortedRepositories.map((repo: any) => (
+                        <div key={repo.id}>
+                            <a href={repo.html_url} target="_blank" rel="noopener noreferrer">
+                                {repo.full_name}
+                            </a>
+                            {' - '}
+                            {repo.stargazers_count} stars, {repo.forks} forks.
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div>{error ? `Error: ${error}` : 'No repositories found.'}</div>
+            )}
+        </div>
+    )
+}
