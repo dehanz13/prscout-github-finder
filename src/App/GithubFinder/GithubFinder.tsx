@@ -1,5 +1,5 @@
 import React from 'react'
-import { kea, actions, listeners, reducers, useActions, useValues, path, afterMount } from 'kea'
+import { kea, actions, listeners, reducers, selectors, useActions, useValues, path, afterMount } from 'kea'
 
 import type { logicType } from './GithubFinderType'
 
@@ -66,6 +66,15 @@ const logic = kea<logicType>([
             }
         },
     })),
+
+    selectors({
+        sortedRepositories: [
+            (selectors) => [selectors.repositories],
+            (repositories: any) => {
+                return [...repositories].sort((a, b) => b.startgazers_count - a.stargazers_count)
+            },
+        ],
+    }),
 
     afterMount(({ actions, values }) => {
         actions.setUsername(values.username)
