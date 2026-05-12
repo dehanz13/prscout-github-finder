@@ -8,12 +8,36 @@ const logic = kea<logicType>([
     path(['App', 'GithubFinder', 'GithubFinder']),
     actions({
         setUsername: (username) => ({ username }),
+        setRepositories: (repositories) => ({ repositories }),
+        setFetchError: (error) => ({ error }),
     }),
     reducers({
         username: [
             'keajs',
             {
                 setUsername: (_, payload) => payload.username,
+            },
+        ],
+        repositories: [
+            [],
+            {
+                setUsername: () => [],
+                setRepositories: (_, { repositories }) => repositories,
+            },
+        ],
+        isLoading: [
+            false,
+            {
+                setUsername: () => true,
+                setRepositories: () => false,
+                setFetchError: () => false,
+            },
+        ],
+        error: [
+            null,
+            {
+                setUsername: () => null,
+                setFetchError: (_, { error }) => error,
             },
         ],
     }),
