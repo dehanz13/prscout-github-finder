@@ -74,22 +74,22 @@ const logic = kea<logicType>([
         },
     })),
 
+    afterMount(({ actions, values }) => {
+        actions.setUsername(values.username)
+    }),
+
     selectors({
         sortedRepositories: [
             (selectors) => [selectors.repositories],
-            (repositories: any) => {
-                return [...repositories].sort((a, b) => b.startgazers_count - a.stargazers_count)
+            (repositories) => {
+                return [...repositories].sort((a, b) => b.stargazers_count - a.stargazers_count)
             },
         ],
-    }),
-
-    afterMount(({ actions, values }) => {
-        actions.setUsername(values.username)
     }),
 ])
 
 export function GithubFinder() {
-    const { username, isLoading, repositories, error } = useValues(logic)
+    const { username, isLoading, sortedRepositories, error } = useValues(logic)
     const { setUsername } = useActions(logic)
 
     return (
@@ -100,10 +100,10 @@ export function GithubFinder() {
             </div>
             {isLoading ? (
                 <div>Loading...</div>
-            ) : repositories.length > 0 ? (
+            ) : sortedRepositories.length > 0 ? (
                 <div>
-                    Found {repositories.length} repositories for user <strong>{username}</strong>!
-                    {repositories.map((repo: any) => (
+                    Found {sortedRepositories.length} repositories for user <strong>{username}</strong>!
+                    {sortedRepositories.map((repo: any) => (
                         <div key={repo.id}>
                             <a href={repo.html_url} target="_blank" rel="noopener noreferrer">
                                 {repo.full_name}
