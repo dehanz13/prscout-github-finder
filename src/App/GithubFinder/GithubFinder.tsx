@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { kea, actions, reducers, useActions, useValues, path } from 'kea'
-
+import { kea, actions, listeners, reducers, useActions, useValues, path } from 'kea'
 import type { logicType } from './GithubFinderType'
+
+const API_URL = 'https://api.github.com'
 
 const logic = kea<logicType>([
     path(['App', 'GithubFinder', 'GithubFinder']),
@@ -15,6 +16,24 @@ const logic = kea<logicType>([
                 setUsername: (_, payload) => payload.username,
             },
         ],
+    }),
+
+    listeners({
+        setUsername: async ({ username }) => breakpoint => {
+            // code to run when the username is set, e.g. fetch repos for that user
+            const url = `${API_URL}/users/${username}/repos?per_page=250`
+
+            const response = await window.fetch(url)
+            const json = await response.json()
+
+            if (response.status === 200) {
+                // we have repos in `json`
+
+            } else {
+                // there is an error with `json.message`
+
+            }
+        },
     }),
 ])
 
